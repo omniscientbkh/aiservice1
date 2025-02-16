@@ -257,4 +257,56 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial load
     fetchAndDisplayServices();
+
+    // Включаем валидацию форм Bootstrap
+    (function () {
+        'use strict'
+        
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            })
+        })
+    })()
+
+    // Плавный скролл для якорных ссылок
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault()
+            const target = document.querySelector(this.getAttribute('href'))
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                })
+            }
+        })
+    })
+
+    // Автоматическое скрытие уведомлений
+    document.querySelectorAll('.alert').forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0'
+            setTimeout(() => {
+                alert.remove()
+            }, 300)
+        }, 5000)
+    })
+
+    // Добавление анимации загрузки для кнопок при отправке форм
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const button = this.querySelector('button[type="submit"]')
+            if (button) {
+                button.disabled = true
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Загрузка...'
+            }
+        })
+    })
 }); 

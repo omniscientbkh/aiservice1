@@ -11,11 +11,14 @@ from functools import wraps
 from flask import after_this_request
 import gzip
 import io
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField
+from wtforms.validators import DataRequired, Email
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Замените на безопасный секретный ключ
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///services.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -84,6 +87,11 @@ class Review(db.Model):
     comment = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    remember_me = BooleanField('Запомнить меня')
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -121,17 +129,19 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
         
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('index'))
-            
-        flash('Неверный email или пароль')
-    return render_template('login.html')
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            next_page = request.args.get('next')
+            return redirect(next_page if next_page else url_for('index'))
+        flash('Неправильный email или пароль')
+        
+    return render_template('login.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -139,22 +149,24 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
+@app.route('/reset-password-request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
-        
         if user:
             send_reset_email(user)
             flash('Инструкции по сбросу пароля отправлены на email')
             return redirect(url_for('login'))
-            
         flash('Email не найден')
-    return render_template('forgot_password.html')
+    return render_template('reset_password_request.html')
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     try:
         serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
         email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
@@ -561,11 +573,19 @@ if __name__ == '__main__':
         admin_email = os.getenv('ADMIN_EMAIL')
         admin_password = os.getenv('ADMIN_PASSWORD')
         
-        admin = User.query.filter_by(email=admin_email).first()
-        if not admin:
-            admin = User(email=admin_email, role='admin')
-            admin.set_password(admin_password)
-            db.session.add(admin)
-            db.session.commit()
+        if admin_email and admin_password:
+            admin = User.query.filter_by(email=admin_email).first()
+            if not admin:
+                admin = User(email=admin_email, role='admin')
+                admin.set_password(admin_password)
+                db.session.add(admin)
+                db.session.commit()
+                print(f"Admin user created: {admin_email}")
+            else:
+                # Ensure existing user has admin role
+                if admin.role != 'admin':
+                    admin.role = 'admin'
+                    db.session.commit()
+                    print(f"Updated user to admin role: {admin_email}")
         
     app.run(debug=True) 
