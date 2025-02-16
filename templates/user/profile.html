@@ -1,62 +1,71 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="profile-header">
-        <h1>Профиль пользователя</h1>
+<div class="container py-4">
+    <div class="profile-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4 mb-0">Профиль</h1>
+            <button class="btn btn-outline" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-edit me-1"></i>Редактировать
+            </button>
+        </div>
+
         <div class="profile-stats">
-            <a href="{{ url_for('user_favorites') }}" class="stat-box">
-                <span class="stat-value">{{ favorites_count }}</span>
-                <span class="stat-label">В избранном</span>
-            </a>
-            <div class="stat-box">
-                <span class="stat-value">{{ reviews_count }}</span>
-                <span class="stat-label">Отзывов</span>
+            <div class="stat-card">
+                <div class="stat-value">{{ favorites_count }}</div>
+                <div class="text-secondary small">В избранном</div>
             </div>
-            <a href="{{ url_for('user_history') }}" class="stat-box">
-                <span class="stat-value">{{ recent_views|length }}</span>
-                <span class="stat-label">Недавних просмотров</span>
-            </a>
+            <div class="stat-card">
+                <div class="stat-value">{{ reviews_count }}</div>
+                <div class="text-secondary small">Отзывов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ recent_views|length }}</div>
+                <div class="text-secondary small">Просмотров</div>
+            </div>
         </div>
     </div>
 
-    <div class="profile-content">
-        <div class="profile-section">
-            <h2>Редактировать профиль</h2>
-            <form method="POST" class="profile-form">
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+    <div class="profile-section">
+        <h2 class="h5 mb-3">Недавние просмотры</h2>
+        <div class="services-grid">
+            {% for view in recent_views %}
+            <div class="service-card">
+                <h3 class="h6">{{ view.service.title }}</h3>
+                <p class="description">{{ view.service.description }}</p>
+                <div class="text-secondary small">
+                    Просмотрено: {{ view.viewed_at.strftime('%d.%m.%Y %H:%M') }}
                 </div>
-                
-                <div class="form-group">
-                    <label for="current_password">Текущий пароль:</label>
-                    <input type="password" id="current_password" name="current_password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="new_password">Новый пароль (оставьте пустым, чтобы не менять):</label>
-                    <input type="password" id="new_password" name="new_password">
-                </div>
-                
-                <button type="submit" class="btn-primary">Сохранить изменения</button>
-            </form>
+            </div>
+            {% endfor %}
         </div>
+    </div>
+</div>
 
-        <div class="profile-section">
-            <h2>Недавние просмотры</h2>
-            <div class="recent-views">
-                {% if recent_views %}
-                    {% for view in recent_views %}
-                    <div class="view-item">
-                        <h3>{{ view.service.title }}</h3>
-                        <p class="view-date">Просмотрено: {{ view.viewed_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                        <a href="{{ url_for('get_service', service_id=view.service.id) }}" class="btn-link">Перейти к сервису</a>
+<!-- Модальное окно редактирования профиля -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование профиля</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p>Нет недавних просмотров</p>
-                {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Текущий пароль</label>
+                        <input type="password" name="current_password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый пароль</label>
+                        <input type="password" name="new_password" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Сохранить изменения</button>
+                </form>
             </div>
         </div>
     </div>

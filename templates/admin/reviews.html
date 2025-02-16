@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1>Отзывы</h1>
+</div>
+
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Пользователь</th>
+                <th>Сервис</th>
+                <th>Оценка</th>
+                <th>Комментарий</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+            <tr>
+                <td>{{ review.user.email }}</td>
+                <td>{{ review.service.title }}</td>
+                <td>{{ review.rating }}</td>
+                <td>{{ review.comment }}</td>
+                <td>{{ review.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline text-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

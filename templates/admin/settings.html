@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1>Настройки</h1>
+</div>
+
+<div class="admin-form">
+    <form method="POST" class="needs-validation" novalidate>
+        <div class="admin-form-group">
+            <label class="admin-form-label">Название сайта</label>
+            <input type="text" class="admin-form-control" name="site_name" value="ReadTracker">
+        </div>
+        
+        <div class="admin-form-group">
+            <label class="admin-form-label">Email администратора</label>
+            <input type="email" class="admin-form-control" name="admin_email" value="{{ current_user.email }}">
+        </div>
+        
+        <div class="admin-form-group">
+            <label class="admin-form-label">Количество элементов на странице</label>
+            <input type="number" class="admin-form-control" name="items_per_page" value="10">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            Сохранить настройки
+        </button>
+    </form>
+</div>
+{% endblock %} 

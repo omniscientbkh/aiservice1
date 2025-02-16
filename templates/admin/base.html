@@ -2,16 +2,51 @@
 
 {% block content %}
 <div class="admin-container">
-    <div class="admin-sidebar">
-        <h2>Админ-панель</h2>
-        <nav class="admin-nav">
-            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">Дашборд</a>
-            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">Пользователи</a>
-            <a href="{{ url_for('admin_services') }}" class="admin-nav-item">Сервисы</a>
-        </nav>
-    </div>
-    <div class="admin-content">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <h2>Панель управления</h2>
+        </div>
+        
+        <ul class="admin-nav">
+            <li class="admin-nav-item">
+                <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    Обзор
+                </a>
+            </li>
+            <li class="admin-nav-item">
+                <a href="{{ url_for('admin_users') }}" class="admin-nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    Пользователи
+                </a>
+            </li>
+            <li class="admin-nav-item">
+                <a href="{{ url_for('admin_services') }}" class="admin-nav-link {% if request.endpoint == 'admin_services' %}active{% endif %}">
+                    <i class="fas fa-cube"></i>
+                    Сервисы
+                </a>
+            </li>
+            {% if 'admin_reviews' in current_app.view_functions %}
+            <li class="admin-nav-item">
+                <a href="{{ url_for('admin_reviews') }}" class="admin-nav-link {% if request.endpoint == 'admin_reviews' %}active{% endif %}">
+                    <i class="fas fa-star"></i>
+                    Отзывы
+                </a>
+            </li>
+            {% endif %}
+            {% if 'admin_settings' in current_app.view_functions %}
+            <li class="admin-nav-item">
+                <a href="{{ url_for('admin_settings') }}" class="admin-nav-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i>
+                    Настройки
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </aside>
+
+    <main class="admin-content">
         {% block admin_content %}{% endblock %}
-    </div>
+    </main>
 </div>
 {% endblock %} 

@@ -113,13 +113,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const reviewsContainer = document.getElementById('modal-reviews');
         reviewsContainer.innerHTML = reviews.map(review => `
-            <div class="review">
+            <div class="review-item">
                 <div class="review-header">
                     <span class="review-author">${review.user_email}</span>
-                    <span class="review-rating">★ ${review.rating}</span>
-                    <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
+                    <div class="review-rating">
+                        <i class="fas fa-star"></i>
+                        ${review.rating}
+                    </div>
                 </div>
-                <p class="review-comment">${review.comment || ''}</p>
+                <div class="review-content">${review.comment || ''}</div>
+                <div class="review-date">${new Date(review.created_at).toLocaleDateString()}</div>
             </div>
         `).join('');
     }
@@ -140,30 +143,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch(`/service/${serviceId}`);
                 const data = await response.json();
 
-                document.getElementById('modal-title').textContent = data.title;
-                document.getElementById('modal-description').textContent = data.detailed_description;
-                document.getElementById('modal-pricing').innerHTML = data.pricing;
-                document.getElementById('modal-link').href = data.link;
-                
-                // Добавляем кнопку избранного в модальное окно
-                const favoriteBtn = document.createElement('button');
-                favoriteBtn.className = `favorite-btn ${data.is_favorite ? 'active' : ''}`;
-                favoriteBtn.dataset.id = serviceId;
-                favoriteBtn.innerHTML = data.is_favorite ? '★ В избранном' : '☆ В избранное';
-                favoriteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    toggleFavorite(serviceId);
-                };
-                
-                document.getElementById('modal-actions').innerHTML = '';
-                document.getElementById('modal-actions').appendChild(favoriteBtn);
+                const modalContent = `
+                    <div class="modal-header">
+                        <h3 class="modal-title">${data.title}</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-description">${data.detailed_description}</div>
+                        
+                        <div class="modal-info-section">
+                            <div class="modal-info-title">Тарифы</div>
+                            <div class="modal-pricing">
+                                ${formatPricing(data.pricing)}
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <a href="${data.link}" class="modal-link" target="_blank">
+                                <i class="fas fa-external-link-alt"></i>
+                                Перейти к сервису
+                            </a>
+                            <button class="favorite-btn ${data.is_favorite ? 'active' : ''}" 
+                                    onclick="toggleFavorite(${serviceId})">
+                                <i class="fas ${data.is_favorite ? 'fa-heart' : 'fa-heart'}"></i>
+                                ${data.is_favorite ? 'В избранном' : 'В избранное'}
+                            </button>
+                        </div>
+                        
+                        <div class="modal-reviews">
+                            <div class="modal-info-title">Отзывы</div>
+                            <div class="review-list" id="modal-reviews"></div>
+                        </div>
+                    </div>
+                `;
+
+                document.querySelector('.modal-content').innerHTML = modalContent;
+                document.querySelector('.modal').style.display = 'block';
                 
                 // Загружаем отзывы
                 await loadReviews(serviceId);
-                
-                modal.style.display = 'block';
             });
         });
+    }
+
+    // Функция форматирования тарифов
+    function formatPricing(pricing) {
+        return pricing.split('\n')
+            .filter(line => line.trim())
+            .map(line => {
+                const [label, value] = line.split(':').map(s => s.trim());
+                return `
+                    <div class="pricing-item">
+                        <span class="pricing-label">${label}</span>
+                        <span class="pricing-value">${value}</span>
+                    </div>
+                `;
+            })
+            .join('');
+    }
+
+    // Функция закрытия модального окна
+    function closeModal() {
+        document.querySelector('.modal').style.display = 'none';
     }
 
     // Ленивая загрузка сервисов

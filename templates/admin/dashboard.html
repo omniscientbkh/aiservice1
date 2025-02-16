@@ -1,14 +1,61 @@
 {% extends "admin/base.html" %}
 
 {% block admin_content %}
+<div class="admin-header">
+    <h1>Обзор</h1>
+    <div class="admin-header-actions">
+        <button class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Добавить сервис
+        </button>
+    </div>
+</div>
+
 <div class="admin-stats">
-    <div class="stat-card">
-        <h3>Пользователи</h3>
-        <p class="stat-number">{{ users|length }}</p>
+    <div class="admin-stat-card">
+        <h3>Всего пользователей</h3>
+        <div class="admin-stat-value">{{ users_count }}</div>
     </div>
-    <div class="stat-card">
-        <h3>Сервисы</h3>
-        <p class="stat-number">{{ services|length }}</p>
+    <div class="admin-stat-card">
+        <h3>Всего сервисов</h3>
+        <div class="admin-stat-value">{{ services_count }}</div>
     </div>
+    <div class="admin-stat-card">
+        <h3>Отзывов</h3>
+        <div class="admin-stat-value">{{ reviews_count }}</div>
+    </div>
+    <div class="admin-stat-card">
+        <h3>Просмотров</h3>
+        <div class="admin-stat-value">{{ views_count }}</div>
+    </div>
+</div>
+
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Сервис</th>
+                <th>Просмотры</th>
+                <th>Рейтинг</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services %}
+            <tr>
+                <td>{{ service.title }}</td>
+                <td>{{ service.views|length }}</td>
+                <td>{{ "%.1f"|format(service.rating) }}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline text-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %} 

@@ -22,17 +22,161 @@
     
     <!-- Critical CSS инлайн -->
     <style>
-        /* Критические стили для первого экрана */
-        body { margin: 0; font-family: 'Inter', sans-serif; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 40px; }
-        nav { background-color: #1A1A1A; padding: 20px 40px; }
-        nav a { color: #FFF; text-decoration: none; margin-left: 30px; }
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            background: #fff;
+            color: #111827;
+        }
+        .container { 
+            max-width: 1232px; 
+            margin: 0 auto; 
+            padding: 0 16px; 
+        }
+        .navbar {
+            height: 56px;
+            padding: 0 !important;
+            background-color: #fff !important;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #111827 !important;
+            padding: 0;
+        }
+        .navbar-brand i {
+            color: #2563eb;
+        }
+        .nav-link {
+            padding: 6px 12px !important;
+            font-weight: 500;
+            color: #4b5563 !important;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            color: #111827 !important;
+            background: #f3f4f6;
+        }
+        .nav-item {
+            margin: 0 2px;
+        }
+        .category-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .category-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.875rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #4b5563;
+            background: #f3f4f6;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .category-item:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+        .category-item.active {
+            background: #2563eb;
+            color: #fff;
+        }
+        .subcategories {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 4px;
+        }
+        .subcategory-item {
+            color: #4b5563;
+            font-size: 0.875rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .subcategory-item:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
         .footer {
             margin-top: auto;
-            background-color: #f8f9fa;
+            background-color: #f9fafb;
+            padding: 32px 0 24px;
+            font-size: 0.875rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer h5 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+        .social-links a {
+            font-size: 1.1rem;
+            color: #4b5563 !important;
+            transition: all 0.2s;
         }
         .social-links a:hover {
-            opacity: 0.8;
+            color: #2563eb !important;
+        }
+        .flash-message {
+            padding: 8px 16px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .navbar-toggler {
+            padding: 4px 8px;
+            font-size: 0.875rem;
+            border: none;
+            color: #4b5563;
+        }
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+        .btn-primary {
+            background: #2563eb;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover {
+            border-color: #2563eb;
+            color: #2563eb;
         }
     </style>
     
@@ -46,53 +190,53 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand d-flex align-items-center" href="/">
                 <i class="fas fa-book-reader me-2"></i>ReadTracker
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+                <i class="fas fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">
+                            <a class="nav-link d-flex align-items-center" href="{{ url_for('profile') }}">
                                 <i class="fas fa-user me-1"></i>Профиль
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user_favorites') }}">
-                                <i class="fas fa-heart me-1"></i>Избранное
+                            <a class="nav-link d-flex align-items-center" href="{{ url_for('user_favorites') }}">
+                                <i class="fas fa-heart me-2"></i>Избранное
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user_history') }}">
-                                <i class="fas fa-history me-1"></i>История
+                            <a class="nav-link d-flex align-items-center" href="{{ url_for('user_history') }}">
+                                <i class="fas fa-history me-2"></i>История
                             </a>
                         </li>
                         {% if current_user.role == 'admin' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
-                                    <i class="fas fa-cog me-1"></i>Админ-панель
+                                <a class="nav-link d-flex align-items-center" href="{{ url_for('admin_dashboard') }}">
+                                    <i class="fas fa-cog me-2"></i>Админ-панель
                                 </a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">
-                                <i class="fas fa-sign-out-alt me-1"></i>Выход
+                            <a class="nav-link d-flex align-items-center" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Выход
                             </a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">
+                            <a class="nav-link d-flex align-items-center" href="{{ url_for('login') }}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Вход
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">
-                                <i class="fas fa-user-plus me-1"></i>Регистрация
+                            <a class="btn btn-primary d-flex align-items-center ms-2" href="{{ url_for('register') }}">
+                                Регистрация
                             </a>
                         </li>
                     {% endif %}

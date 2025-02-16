@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response, send_from_directory
+from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response, send_from_directory, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
@@ -287,7 +287,15 @@ def admin_required(f):
 def admin_dashboard():
     users = User.query.all()
     services = Service.query.all()
-    return render_template('admin/dashboard.html', users=users, services=services)
+    reviews = Review.query.all()
+    views = ViewHistory.query.all()
+    
+    return render_template('admin/dashboard.html',
+                         users_count=len(users),
+                         services_count=len(services),
+                         reviews_count=len(reviews),
+                         views_count=len(views),
+                         services=services)
 
 @app.route('/admin/users')
 @login_required
@@ -519,6 +527,26 @@ def index():
     services = Service.query.all()
     categories = db.session.query(Service.category).distinct()
     return render_template('index.html', services=services, categories=categories)
+
+@app.route('/admin/reviews')
+@login_required
+@admin_required
+def admin_reviews():
+    reviews = Review.query.all()
+    return render_template('admin/reviews.html', reviews=reviews)
+
+@app.route('/admin/settings')
+@login_required
+@admin_required
+def admin_settings():
+    return render_template('admin/settings.html')
+
+# В начале файла добавьте декоратор для всего приложения
+@app.context_processor
+def utility_processor():
+    return {
+        'current_app': current_app
+    }
 
 if __name__ == '__main__':
     with app.app_context():
