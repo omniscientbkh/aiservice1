@@ -4,15 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Каталог AI-сервисов</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <!-- Preload критических ресурсов -->
+    <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='js/main.js') }}" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style">
+    
+    <!-- Preconnect для внешних ресурсов -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Асинхронная загрузка шрифтов -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" 
+          rel="stylesheet"
+          media="print" 
+          onload="this.media='all'">
+    
+    <!-- Critical CSS инлайн -->
+    <style>
+        /* Критические стили для первого экрана */
+        body { margin: 0; font-family: 'Inter', sans-serif; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px; }
+        nav { background-color: #1A1A1A; padding: 20px 40px; }
+        nav a { color: #FFF; text-decoration: none; margin-left: 30px; }
+    </style>
+    
+    <!-- Основные стили с атрибутом defer -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" media="print" onload="this.media='all'">
 </head>
 <body>
     <nav>
+        <a href="{{ url_for('index') }}" class="home-link">Главная</a>
         {% if current_user.is_authenticated %}
             <span>{{ current_user.email }}</span>
+            <a href="{{ url_for('profile') }}">Профиль</a>
+            <a href="{{ url_for('user_favorites') }}">Избранное</a>
             {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('admin_dashboard') }}">Админ-панель</a>
             {% endif %}
@@ -32,6 +58,29 @@
     {% endwith %}
     
     {% block content %}{% endblock %}
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Lazy loading для изображений -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var images = document.querySelectorAll('img[data-src]');
+            var imageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var img = entry.target;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+            
+            images.forEach(function(img) {
+                imageObserver.observe(img);
+            });
+        });
+    </script>
+
+    <!-- Отложенная загрузка основного JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </body>
 </html> 

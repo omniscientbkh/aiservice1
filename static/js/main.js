@@ -7,6 +7,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let searchTimeout;
 
+    // Добавляем кэширование запросов
+    const cache = new Map();
+
+    async function fetchWithCache(url, options = {}) {
+        const cacheKey = url + JSON.stringify(options);
+        
+        if (cache.has(cacheKey)) {
+            const { data, timestamp } = cache.get(cacheKey);
+            // Кэш валиден 5 минут
+            if (Date.now() - timestamp < 5 * 60 * 1000) {
+                return data;
+            }
+            cache.delete(cacheKey);
+        }
+        
+        const response = await fetch(url, options);
+        const data = await response.json();
+        cache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
+    }
+
+    // Добавляем дебаунсинг для поиска
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
     async function fetchAndDisplayServices() {
         const formData = new FormData(filterForm);
         const params = new URLSearchParams(formData);
@@ -132,10 +166,82 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Search with debouncing
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(fetchAndDisplayServices, 300);
+    // Ленивая загрузка сервисов
+    function lazyLoadServices() {
+        const options = {
+            root: null,
+            rootMargin: '50px',
+            threshold: 0.1
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const card = entry.target;
+                    if (card.dataset.loading === 'true') return;
+                    
+                    card.dataset.loading = 'true';
+                    fetchServiceDetails(card.dataset.id)
+                        .then(data => updateServiceCard(card, data));
+                }
+            });
+        }, options);
+        
+        document.querySelectorAll('.service-card').forEach(card => {
+            observer.observe(card);
+        });
+    }
+
+    // Оптимизированная функция обновления карточек
+    const updateServiceCard = (() => {
+        const template = document.createElement('template');
+        
+        return (card, data) => {
+            template.innerHTML = `
+                <h2>${data.title}</h2>
+                <p class="description">${data.description}</p>
+                <div class="rating">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-value">${data.rating}</span>
+                </div>
+            `;
+            
+            // Используем DocumentFragment для оптимизации DOM операций
+            const fragment = template.content.cloneNode(true);
+            card.innerHTML = '';
+            card.appendChild(fragment);
+        };
+    })();
+
+    // Инициализация с оптимизациями
+    document.addEventListener('DOMContentLoaded', () => {
+        // Отложенная инициализация неприоритетных функций
+        setTimeout(() => {
+            initializeModalHandlers();
+            lazyLoadServices();
+        }, 0);
+        
+        // Оптимизированный поиск с дебаунсингом
+        const debouncedSearch = debounce(fetchAndDisplayServices, 300);
+        searchInput.addEventListener('input', debouncedSearch);
+        
+        // Предзагрузка данных для следующей страницы
+        if ('IntersectionObserver' in window) {
+            const prefetchObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const nextPage = entry.target.dataset.nextPage;
+                        if (nextPage) {
+                            fetchWithCache(`/api/services?page=${nextPage}`);
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('[data-next-page]').forEach(el => {
+                prefetchObserver.observe(el);
+            });
+        }
     });
 
     // Filter form submission

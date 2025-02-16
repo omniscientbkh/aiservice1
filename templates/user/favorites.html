@@ -2,22 +2,33 @@
 
 {% block content %}
 <div class="container">
-    <h1>Избранные сервисы</h1>
+    <div class="page-header">
+        <h1>Избранные сервисы</h1>
+        <a href="{{ url_for('index') }}" class="btn-back">← Вернуться на главную</a>
+    </div>
+    
     <div class="services-grid">
-        {% for favorite in favorites %}
-        <div class="service-card" data-id="{{ favorite.service.id }}">
-            <h2>{{ favorite.service.title }}</h2>
-            <p class="category">{{ favorite.service.category }}</p>
-            <p class="description">{{ favorite.service.description }}</p>
-            <div class="rating">
-                <span class="stars">★★★★★</span>
-                <span class="rating-value">{{ favorite.service.rating }}</span>
+        {% if favorites %}
+            {% for favorite in favorites %}
+            <div class="service-card" data-id="{{ favorite.service.id }}">
+                <h2>{{ favorite.service.title }}</h2>
+                <p class="category">{{ favorite.service.category }}</p>
+                <p class="description">{{ favorite.service.description }}</p>
+                <div class="rating">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-value">{{ favorite.service.rating }}</span>
+                </div>
+                <button class="btn-danger remove-favorite" data-id="{{ favorite.service.id }}">
+                    Удалить из избранного
+                </button>
             </div>
-            <button class="btn-danger remove-favorite" data-id="{{ favorite.service.id }}">
-                Удалить из избранного
-            </button>
-        </div>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>У вас пока нет избранных сервисов</p>
+                <a href="{{ url_for('index') }}" class="btn-primary">Перейти к каталогу</a>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %} 

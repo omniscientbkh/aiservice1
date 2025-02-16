@@ -1,13 +1,16 @@
-from flask import Flask, render_template, jsonify, request, flash, redirect, url_for
+from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 from functools import wraps
+from flask import after_this_request
+import gzip
+import io
 
 load_dotenv()
 
@@ -168,12 +171,6 @@ def reset_password(token):
         
     return render_template('reset_password.html')
 
-@app.route('/')
-def index():
-    services = Service.query.all()
-    categories = db.session.query(Service.category).distinct()
-    return render_template('index.html', services=services, categories=categories)
-
 @app.route('/service/<int:service_id>')
 def get_service(service_id):
     service = Service.query.get_or_404(service_id)
@@ -197,7 +194,22 @@ def get_service(service_id):
             ).first())
     })
 
+# Декоратор для кэширования
+def cache_control(max_age=3600):
+    def decorator(view_function):
+        @wraps(view_function)
+        def wrapped_function(*args, **kwargs):
+            response = make_response(view_function(*args, **kwargs))
+            response.headers['Cache-Control'] = f'public, max-age={max_age}'
+            response.headers['Expires'] = (datetime.utcnow() + timedelta(seconds=max_age))\
+                .strftime('%a, %d %b %Y %H:%M:%S GMT')
+            return response
+        return wrapped_function
+    return decorator
+
+# Применяем кэширование к API эндпоинтам
 @app.route('/api/services')
+@cache_control(max_age=300)  # Кэш на 5 минут
 def get_services():
     category = request.args.get('category')
     subcategory = request.args.get('subcategory')
@@ -242,6 +254,11 @@ def get_services():
         'rating': s.rating,
         'created_at': s.created_at.isoformat()
     } for s in services])
+
+@app.route('/static/<path:filename>')
+@cache_control(max_age=86400)  # Кэш на 24 часа
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 def admin_required(f):
     @wraps(f)
@@ -412,6 +429,84 @@ def user_history():
     history = ViewHistory.query.filter_by(user_id=current_user.id)\
         .order_by(ViewHistory.viewed_at.desc()).all()
     return render_template('user/history.html', history=history)
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        # Проверка текущего пароля
+        if not current_user.check_password(request.form.get('current_password')):
+            flash('Неверный текущий пароль')
+            return redirect(url_for('profile'))
+        
+        # Обновление пароля
+        if request.form.get('new_password'):
+            current_user.set_password(request.form.get('new_password'))
+            flash('Пароль успешно обновлен')
+        
+        # Обновление email
+        new_email = request.form.get('email')
+        if new_email and new_email != current_user.email:
+            if User.query.filter_by(email=new_email).first():
+                flash('Этот email уже используется')
+                return redirect(url_for('profile'))
+            current_user.email = new_email
+            flash('Email успешно обновлен')
+        
+        db.session.commit()
+        return redirect(url_for('profile'))
+    
+    # Получаем статистику
+    favorites_count = Favorite.query.filter_by(user_id=current_user.id).count()
+    reviews_count = Review.query.filter_by(user_id=current_user.id).count()
+    recent_views = ViewHistory.query.filter_by(user_id=current_user.id)\
+        .order_by(ViewHistory.viewed_at.desc())\
+        .limit(5)\
+        .all()
+    
+    return render_template('user/profile.html',
+                         favorites_count=favorites_count,
+                         reviews_count=reviews_count,
+                         recent_views=recent_views)
+
+# Добавляем Gzip компрессию
+def gzipped(f):
+    @wraps(f)
+    def view_func(*args, **kwargs):
+        @after_this_request
+        def zipper(response):
+            accept_encoding = request.headers.get('Accept-Encoding', '')
+            
+            if 'gzip' not in accept_encoding.lower():
+                return response
+            
+            response.direct_passthrough = False
+            
+            if (response.status_code < 200 or
+                response.status_code >= 300 or
+                'Content-Encoding' in response.headers):
+                return response
+            
+            gzip_buffer = io.BytesIO()
+            gzip_file = gzip.GzipFile(mode='wb', fileobj=gzip_buffer)
+            gzip_file.write(response.data)
+            gzip_file.close()
+            
+            response.data = gzip_buffer.getvalue()
+            response.headers['Content-Encoding'] = 'gzip'
+            response.headers['Content-Length'] = len(response.data)
+            
+            return response
+        return f(*args, **kwargs)
+    return view_func
+
+# Применяем Gzip к тяжелым ответам
+@app.route('/')
+@gzipped
+def index():
+    services = Service.query.all()
+    categories = db.session.query(Service.category).distinct()
+    return render_template('index.html', services=services, categories=categories)
 
 if __name__ == '__main__':
     with app.app_context():
