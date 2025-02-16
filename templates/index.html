@@ -1,43 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <header>
-        <h1>Каталог AI-сервисов</h1>
-        <input type="text" id="search" placeholder="Поиск сервисов..." autocomplete="off">
-        
-        <form id="filter-form" class="filters">
-            <div class="filter-group">
-                <select name="category">
-                    <option value="">Все категории</option>
-                    {% for category in categories %}
-                    <option value="{{ category[0] }}">{{ category[0] }}</option>
-                    {% endfor %}
-                </select>
-
-                <select name="pricing_type">
-                    <option value="">Все типы цен</option>
-                    <option value="free">Бесплатные</option>
-                    <option value="paid">Платные</option>
-                    <option value="freemium">Freemium</option>
-                </select>
-
-                <select name="min_rating">
-                    <option value="">Любой рейтинг</option>
-                    <option value="4">4+ звезды</option>
-                    <option value="4.5">4.5+ звезды</option>
-                </select>
-
-                <select name="sort_by">
-                    <option value="created_at">Сначала новые</option>
-                    <option value="rating">По рейтингу</option>
-                </select>
-            </div>
-        </form>
-    </header>
+<div class="container py-4">
+    <div class="category-nav">
+        {% for category in categories %}
+            <div class="category-item">{{ category.category }}</div>
+        {% endfor %}
+    </div>
 
     <div class="services-grid">
-        <!-- Services will be dynamically inserted here -->
+        {% for service in services %}
+            <div class="service-card" data-id="{{ service.id }}">
+                <div class="service-card-header">
+                    <h2 class="service-title">{{ service.title }}</h2>
+                    <button class="favorite-btn {% if service.id in favorites %}active{% endif %}" 
+                            data-id="{{ service.id }}"
+                            onclick="toggleFavorite({{ service.id }})">
+                        <i class="fas {% if service.id in favorites %}fa-heart{% else %}fa-heart{% endif %}"></i>
+                    </button>
+                </div>
+                
+                <div class="service-category">
+                    <span class="category-badge">{{ service.category }}</span>
+                    {% if service.subcategory %}
+                        <span class="subcategory-badge">{{ service.subcategory }}</span>
+                    {% endif %}
+                </div>
+                
+                <p class="service-description">{{ service.description }}</p>
+                
+                {% if service.tags %}
+                <div class="tags">
+                    {% for tag in service.tags.split(',') %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="service-footer">
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <span>{{ "%.1f"|format(service.rating) }}</span>
+                    </div>
+                    <div class="pricing-type">{{ service.pricing_type }}</div>
+                </div>
+            </div>
+        {% endfor %}
     </div>
 </div>
 

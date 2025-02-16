@@ -38,14 +38,17 @@
             padding: 0 16px; 
         }
         .navbar {
-            height: 56px;
+            height: 64px;
             padding: 0 !important;
             background-color: #fff !important;
             border-bottom: 1px solid #e5e7eb;
         }
+        .navbar > .container {
+            height: 100%;
+        }
         .navbar-brand {
+            font-size: 1.125rem;
             font-weight: 600;
-            font-size: 1.05rem;
             color: #111827 !important;
             padding: 0;
         }
@@ -178,6 +181,60 @@
             border-color: #2563eb;
             color: #2563eb;
         }
+        .navbar-search {
+            flex: 1;
+            max-width: 800px;
+            margin: 0 48px;
+        }
+        .search-box {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .search-box input {
+            width: 100%;
+            height: 40px;
+            padding: 0 16px 0 42px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.925rem;
+            color: #111827;
+            background: #f9fafb;
+            transition: all 0.2s;
+        }
+        .search-box input:hover {
+            background: #fff;
+            border-color: #d1d5db;
+        }
+        .search-box input:focus {
+            background: #fff;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 16px;
+            pointer-events: none;
+        }
+        @media (max-width: 991px) {
+            .navbar-search {
+                display: none;
+            }
+            .search-box {
+                margin: 8px 16px;
+            }
+            .search-box input {
+                background: #f9fafb;
+                height: 40px;
+                font-size: 0.925rem;
+            }
+        }
     </style>
     
     <!-- Основные стили с атрибутом defer -->
@@ -195,10 +252,36 @@
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <i class="fas fa-book-reader me-2"></i>ReadTracker
             </a>
+
+            <!-- Добавляем поисковую строку -->
+            <div class="navbar-search d-none d-lg-flex">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           id="search" 
+                           class="form-control" 
+                           placeholder="Поиск AI-сервисов..."
+                           autocomplete="off">
+                </div>
+            </div>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <i class="fas fa-bars"></i>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Мобильная версия поиска -->
+                <div class="d-lg-none mb-3 mt-2">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               id="search-mobile" 
+                               class="form-control" 
+                               placeholder="Поиск AI-сервисов..."
+                               autocomplete="off">
+                    </div>
+                </div>
+
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
@@ -375,5 +458,10 @@
     
     <!-- Отложенная загрузка основного JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+
+    <!-- В конце body, перед скриптами -->
+    <div class="modal" style="display: none;">
+        <div class="modal-content"></div>
+    </div>
 </body>
 </html> 

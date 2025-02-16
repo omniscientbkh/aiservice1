@@ -221,51 +221,48 @@ def cache_control(max_age=3600):
 
 # Применяем кэширование к API эндпоинтам
 @app.route('/api/services')
-@cache_control(max_age=300)  # Кэш на 5 минут
 def get_services():
-    category = request.args.get('category')
-    subcategory = request.args.get('subcategory')
-    pricing_type = request.args.get('pricing_type')
-    min_rating = request.args.get('min_rating', type=float)
-    sort_by = request.args.get('sort_by', 'created_at')
-    search = request.args.get('search', '').lower()
-
-    query = Service.query
-
-    if category:
-        query = query.filter_by(category=category)
-    if subcategory:
-        query = query.filter_by(subcategory=subcategory)
-    if pricing_type:
-        query = query.filter_by(pricing_type=pricing_type)
-    if min_rating:
-        query = query.filter(Service.rating >= min_rating)
-    if search:
-        query = query.filter(
-            db.or_(
-                Service.title.ilike(f'%{search}%'),
-                Service.description.ilike(f'%{search}%'),
-                Service.tags.ilike(f'%{search}%')
-            )
+    search_query = request.args.get('search', '').lower()
+    category = request.args.get('category', '')
+    
+    # Получаем все сервисы
+    services = Service.query.all()
+    
+    # Фильтруем по поиску и категории
+    filtered_services = []
+    for service in services:
+        matches_search = (
+            search_query in service.title.lower() or 
+            search_query in service.description.lower() or 
+            search_query in service.category.lower() or 
+            (service.tags and search_query in service.tags.lower())
         )
-
-    if sort_by == 'rating':
-        query = query.order_by(Service.rating.desc())
-    elif sort_by == 'created_at':
-        query = query.order_by(Service.created_at.desc())
-
-    services = query.all()
-    return jsonify([{
-        'id': s.id,
-        'title': s.title,
-        'description': s.description,
-        'category': s.category,
-        'subcategory': s.subcategory,
-        'tags': s.tags.split(',') if s.tags else [],
-        'pricing_type': s.pricing_type,
-        'rating': s.rating,
-        'created_at': s.created_at.isoformat()
-    } for s in services])
+        matches_category = not category or service.category == category
+        
+        if matches_search and matches_category:
+            # Проверяем, находится ли сервис в избранном у текущего пользователя
+            is_favorite = False
+            if current_user.is_authenticated:
+                is_favorite = Favorite.query.filter_by(
+                    user_id=current_user.id,
+                    service_id=service.id
+                ).first() is not None
+            
+            # Формируем данные сервиса
+            service_data = {
+                'id': service.id,
+                'title': service.title,
+                'description': service.description,
+                'category': service.category,
+                'subcategory': service.subcategory,
+                'tags': service.tags,
+                'rating': service.rating,
+                'pricing_type': service.pricing_type,
+                'is_favorite': is_favorite
+            }
+            filtered_services.append(service_data)
+    
+    return jsonify(filtered_services)
 
 @app.route('/static/<path:filename>')
 @cache_control(max_age=86400)  # Кэш на 24 часа

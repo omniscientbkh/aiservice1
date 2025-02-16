@@ -133,8 +133,8 @@ header h1 {
 .service-card {
     background: #fff;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 1.25rem;
     transition: all 0.2s;
 }
 
@@ -143,18 +143,62 @@ header h1 {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-.service-card h2 {
+.service-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.service-title {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 8px;
+    margin: 0;
 }
 
-.service-card .description {
+.service-category {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.category-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-radius: 4px;
+}
+
+.subcategory-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: #fff;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.service-description {
     font-size: 0.875rem;
     color: var(--text-secondary);
-    margin-bottom: 12px;
     line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.service-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.service-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
 /* Tags */
@@ -178,9 +222,13 @@ header h1 {
 .rating {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
     color: var(--primary);
     font-size: 0.875rem;
+}
+
+.rating i {
+    color: var(--primary);
 }
 
 /* Modal */
@@ -315,29 +363,25 @@ header h1 {
 }
 
 .favorite-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #fff;
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    color: var(--primary);
     cursor: pointer;
     transition: all 0.2s;
+    border-radius: 6px;
 }
 
 .favorite-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    background: var(--bg-secondary);
 }
 
 .favorite-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
+    color: var(--primary);
+}
+
+.favorite-btn i {
+    font-size: 1.25rem;
 }
 
 /* Отзывы в модальном окне */
@@ -865,10 +909,10 @@ th {
 
 .empty-state {
     text-align: center;
-    padding: 3rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 4rem 2rem;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     grid-column: 1 / -1;
 }
 
@@ -958,4 +1002,39 @@ th {
     .card {
         margin-bottom: 1rem;
     }
+}
+
+.search-section {
+    margin-bottom: 2rem;
+}
+
+.search-box {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-box input {
+    padding: 1rem 1.5rem;
+    padding-left: 3rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
 } 

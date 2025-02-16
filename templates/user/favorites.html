@@ -1,32 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4" data-catalog-url="{{ url_for('index') }}">
     <div class="page-header">
-        <h1>Избранные сервисы</h1>
-        <a href="{{ url_for('index') }}" class="btn-back">← Вернуться на главную</a>
+        <h1 class="h4 mb-0">Избранные сервисы</h1>
+        <a href="{{ url_for('index') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left me-2"></i>Вернуться на главную
+        </a>
     </div>
     
     <div class="services-grid">
         {% if favorites %}
             {% for favorite in favorites %}
             <div class="service-card" data-id="{{ favorite.service.id }}">
-                <h2>{{ favorite.service.title }}</h2>
-                <p class="category">{{ favorite.service.category }}</p>
-                <p class="description">{{ favorite.service.description }}</p>
-                <div class="rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-value">{{ favorite.service.rating }}</span>
+                <div class="service-card-header">
+                    <h2 class="service-title">{{ favorite.service.title }}</h2>
+                    <button class="favorite-btn active" 
+                            data-id="{{ favorite.service.id }}"
+                            onclick="toggleFavorite({{ favorite.service.id }})">
+                        <i class="fas fa-heart"></i>
+                    </button>
                 </div>
-                <button class="btn-danger remove-favorite" data-id="{{ favorite.service.id }}">
-                    Удалить из избранного
-                </button>
+                
+                <div class="service-category">
+                    <span class="category-badge">{{ favorite.service.category }}</span>
+                    {% if favorite.service.subcategory %}
+                        <span class="subcategory-badge">{{ favorite.service.subcategory }}</span>
+                    {% endif %}
+                </div>
+                
+                <p class="service-description">{{ favorite.service.description }}</p>
+                
+                {% if favorite.service.tags %}
+                <div class="tags">
+                    {% for tag in favorite.service.tags.split(',') %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="service-footer">
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <span>{{ "%.1f"|format(favorite.service.rating) }}</span>
+                    </div>
+                    <div class="service-date">
+                        Добавлено: {{ favorite.created_at.strftime('%d.%m.%Y') }}
+                    </div>
+                </div>
             </div>
             {% endfor %}
         {% else %}
             <div class="empty-state">
-                <p>У вас пока нет избранных сервисов</p>
-                <a href="{{ url_for('index') }}" class="btn-primary">Перейти к каталогу</a>
+                <i class="far fa-heart mb-3" style="font-size: 2rem; color: var(--text-secondary)"></i>
+                <p class="text-secondary mb-3">У вас пока нет избранных сервисов</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    Перейти к каталогу
+                </a>
             </div>
         {% endif %}
     </div>

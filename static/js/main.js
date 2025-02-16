@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('service-modal');
     const closeBtn = document.getElementsByClassName('close')[0];
     const searchInput = document.getElementById('search');
+    const searchInputMobile = document.getElementById('search-mobile');
     const filterForm = document.getElementById('filter-form');
     const servicesGrid = document.querySelector('.services-grid');
     
@@ -41,12 +42,12 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    async function fetchAndDisplayServices() {
+    async function fetchAndDisplayServices(value) {
         const formData = new FormData(filterForm);
         const params = new URLSearchParams(formData);
         
-        if (searchInput.value) {
-            params.append('search', searchInput.value);
+        if (value) {
+            params.append('search', value);
         }
 
         const response = await fetch(`/api/services?${params.toString()}`);
@@ -72,19 +73,56 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeModalHandlers();
     }
 
-    async function toggleFavorite(serviceId) {
-        const isFavorite = document.querySelector(`.favorite-btn[data-id="${serviceId}"]`)
-            .classList.contains('active');
+    // Делаем функции глобальными
+    window.closeModal = function() {
+        document.querySelector('.modal').style.display = 'none';
+    };
+
+    window.toggleFavorite = async function(serviceId) {
+        const favoriteBtn = document.querySelector(`.favorite-btn[data-id="${serviceId}"]`);
+        const isFavorite = favoriteBtn?.classList.contains('active');
         
         const method = isFavorite ? 'DELETE' : 'POST';
         const response = await fetch(`/api/favorites/${serviceId}`, { method });
         const data = await response.json();
         
         if (data.status === 'added' || data.status === 'removed') {
-            document.querySelectorAll(`.favorite-btn[data-id="${serviceId}"]`)
-                .forEach(btn => btn.classList.toggle('active'));
+            // Обновляем все кнопки избранного для этого сервиса
+            document.querySelectorAll(`.favorite-btn[data-id="${serviceId}"]`).forEach(btn => {
+                btn.classList.toggle('active');
+                // Обновляем иконку
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = btn.classList.contains('active') ? 'fas fa-heart' : 'far fa-heart';
+                }
+            });
+
+            // Если мы на странице избранного и удалили из избранного
+            if (window.location.pathname.includes('favorites') && data.status === 'removed') {
+                const serviceCard = document.querySelector(`.service-card[data-id="${serviceId}"]`);
+                if (serviceCard) {
+                    serviceCard.remove();
+                    
+                    // Проверяем, остались ли еще карточки
+                    const remainingCards = document.querySelectorAll('.service-card');
+                    if (remainingCards.length === 0) {
+                        const container = document.querySelector('.container');
+                        const catalogUrl = container.dataset.catalogUrl;
+                        const servicesGrid = document.querySelector('.services-grid');
+                        servicesGrid.innerHTML = `
+                            <div class="empty-state">
+                                <i class="far fa-heart mb-3" style="font-size: 2rem; color: var(--text-secondary)"></i>
+                                <p class="text-secondary mb-3">У вас пока нет избранных сервисов</p>
+                                <a href="${catalogUrl}" class="btn btn-primary">
+                                    Перейти к каталогу
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+            }
         }
-    }
+    };
 
     async function submitReview(serviceId, rating, comment) {
         const response = await fetch(`/api/reviews/${serviceId}`, {
@@ -131,11 +169,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const serviceCards = document.querySelectorAll('.service-card');
         serviceCards.forEach(card => {
             card.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('favorite-btn') || 
-                    e.target.classList.contains('remove-favorite')) {
+                if (e.target.closest('.favorite-btn')) {
                     e.preventDefault();
                     e.stopPropagation();
-                    await toggleFavorite(card.dataset.id);
                     return;
                 }
 
@@ -146,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const modalContent = `
                     <div class="modal-header">
                         <h3 class="modal-title">${data.title}</h3>
-                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                        <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="modal-description">${data.detailed_description}</div>
@@ -164,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 Перейти к сервису
                             </a>
                             <button class="favorite-btn ${data.is_favorite ? 'active' : ''}" 
+                                    data-id="${serviceId}"
                                     onclick="toggleFavorite(${serviceId})">
                                 <i class="fas ${data.is_favorite ? 'fa-heart' : 'fa-heart'}"></i>
                                 ${data.is_favorite ? 'В избранном' : 'В избранное'}
@@ -177,8 +214,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
 
-                document.querySelector('.modal-content').innerHTML = modalContent;
-                document.querySelector('.modal').style.display = 'block';
+                const modalElement = document.querySelector('.modal');
+                modalElement.querySelector('.modal-content').innerHTML = modalContent;
+                modalElement.style.display = 'block';
+
+                // Закрытие по клику вне модального окна
+                modalElement.addEventListener('click', function(e) {
+                    if (e.target === modalElement) {
+                        closeModal();
+                    }
+                });
+
+                // Закрытие по нажатию Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                    }
+                });
                 
                 // Загружаем отзывы
                 await loadReviews(serviceId);
@@ -200,11 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             })
             .join('');
-    }
-
-    // Функция закрытия модального окна
-    function closeModal() {
-        document.querySelector('.modal').style.display = 'none';
     }
 
     // Ленивая загрузка сервисов
@@ -254,6 +301,123 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     })();
 
+    // Функция для синхронизации поисковых полей
+    function syncSearchInputs(value) {
+        searchInput.value = value;
+        searchInputMobile.value = value;
+        // Выполняем поиск
+        handleSearch(value);
+    }
+
+    // Обработка категорий
+    const categoryButtons = document.querySelectorAll('.category-item');
+    let activeCategory = null;
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            // Убираем активный класс у всех кнопок
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Если кликнули по той же категории - сбрасываем фильтр
+            if (activeCategory === button.textContent.trim()) {
+                activeCategory = null;
+                await fetchAndDisplayServices('');
+                return;
+            }
+
+            // Добавляем активный класс к выбранной кнопке
+            button.classList.add('active');
+            activeCategory = button.textContent.trim();
+
+            // Получаем текущий поисковый запрос
+            const searchQuery = document.getElementById('search').value;
+            
+            // Формируем параметры запроса
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+            if (activeCategory) params.append('category', activeCategory);
+
+            // Загружаем отфильтрованные сервисы
+            const response = await fetch(`/api/services?${params.toString()}`);
+            const services = await response.json();
+            
+            // Обновляем отображение
+            servicesGrid.innerHTML = services.map(service => `
+                <div class="service-card" data-id="${service.id}">
+                    <div class="service-card-header">
+                        <h2 class="service-title">${service.title}</h2>
+                        <button class="favorite-btn ${service.is_favorite ? 'active' : ''}" 
+                                data-id="${service.id}"
+                                onclick="toggleFavorite(${service.id})">
+                            <i class="fas ${service.is_favorite ? 'fa-heart' : 'fa-heart'}"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="service-category">
+                        <span class="category-badge">${service.category}</span>
+                        ${service.subcategory ? `
+                            <span class="subcategory-badge">${service.subcategory}</span>
+                        ` : ''}
+                    </div>
+                    
+                    <p class="service-description">${service.description}</p>
+                    
+                    ${service.tags ? `
+                        <div class="tags">
+                            ${service.tags.split(',').map(tag => `
+                                <span class="tag">${tag.trim()}</span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="service-footer">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <span>${parseFloat(service.rating).toFixed(1)}</span>
+                        </div>
+                        <div class="pricing-type">${service.pricing_type}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Переинициализируем обработчики модальных окон
+            initializeModalHandlers();
+        });
+    });
+
+    // Обновляем функцию поиска для учета активной категории
+    async function handleSearch(value) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            const params = new URLSearchParams();
+            if (value) params.append('search', value);
+            if (activeCategory) params.append('category', activeCategory);
+            
+            const response = await fetch(`/api/services?${params.toString()}`);
+            const services = await response.json();
+            
+            // Обновляем отображение сервисов
+            servicesGrid.innerHTML = services.map(service => `
+                <div class="service-card" data-id="${service.id}" data-category="${service.category}">
+                    <h2>${service.title}</h2>
+                    <p class="category">${service.category} ${service.subcategory ? `/ ${service.subcategory}` : ''}</p>
+                    <p class="description">${service.description}</p>
+                    <div class="tags">
+                        ${service.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="pricing-type">${service.pricing_type}</div>
+                    <div class="rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">${service.rating}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Переинициализируем обработчики
+            initializeModalHandlers();
+        }, 300);
+    }
+
     // Инициализация с оптимизациями
     document.addEventListener('DOMContentLoaded', () => {
         // Отложенная инициализация неприоритетных функций
@@ -262,9 +426,9 @@ document.addEventListener('DOMContentLoaded', function() {
             lazyLoadServices();
         }, 0);
         
-        // Оптимизированный поиск с дебаунсингом
-        const debouncedSearch = debounce(fetchAndDisplayServices, 300);
-        searchInput.addEventListener('input', debouncedSearch);
+        // Обработчики для обоих полей поиска
+        searchInput.addEventListener('input', (e) => syncSearchInputs(e.target.value));
+        searchInputMobile.addEventListener('input', (e) => syncSearchInputs(e.target.value));
         
         // Предзагрузка данных для следующей страницы
         if ('IntersectionObserver' in window) {
