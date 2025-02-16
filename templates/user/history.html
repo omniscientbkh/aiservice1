@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>История просмотров</h1>
+    <div class="services-grid">
+        {% for view in history %}
+        <div class="service-card" data-id="{{ view.service.id }}">
+            <h2>{{ view.service.title }}</h2>
+            <p class="category">{{ view.service.category }}</p>
+            <p class="description">{{ view.service.description }}</p>
+            <div class="rating">
+                <span class="stars">★★★★★</span>
+                <span class="rating-value">{{ view.service.rating }}</span>
+            </div>
+            <p class="view-date">Просмотрено: {{ view.viewed_at.strftime('%d.%m.%Y %H:%M') }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

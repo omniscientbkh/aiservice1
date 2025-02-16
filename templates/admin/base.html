@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-sidebar">
+        <h2>Админ-панель</h2>
+        <nav class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">Дашборд</a>
+            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">Пользователи</a>
+            <a href="{{ url_for('admin_services') }}" class="admin-nav-item">Сервисы</a>
+        </nav>
+    </div>
+    <div class="admin-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %} 

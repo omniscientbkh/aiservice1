@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1>Каталог AI-сервисов</h1>
+        <input type="text" id="search" placeholder="Поиск сервисов..." autocomplete="off">
+        
+        <form id="filter-form" class="filters">
+            <div class="filter-group">
+                <select name="category">
+                    <option value="">Все категории</option>
+                    {% for category in categories %}
+                    <option value="{{ category[0] }}">{{ category[0] }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="pricing_type">
+                    <option value="">Все типы цен</option>
+                    <option value="free">Бесплатные</option>
+                    <option value="paid">Платные</option>
+                    <option value="freemium">Freemium</option>
+                </select>
+
+                <select name="min_rating">
+                    <option value="">Любой рейтинг</option>
+                    <option value="4">4+ звезды</option>
+                    <option value="4.5">4.5+ звезды</option>
+                </select>
+
+                <select name="sort_by">
+                    <option value="created_at">Сначала новые</option>
+                    <option value="rating">По рейтингу</option>
+                </select>
+            </div>
+        </form>
+    </header>
+
+    <div class="services-grid">
+        <!-- Services will be dynamically inserted here -->
+    </div>
+</div>
+
+<div id="service-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title"></h2>
+        <p id="modal-description"></p>
+        <div id="modal-pricing"></div>
+        <a id="modal-link" href="" target="_blank">Перейти к сервису</a>
+        <div id="modal-actions" class="modal-actions"></div>
+        {% if current_user.is_authenticated %}
+        <div class="review-form">
+            <h3>Оставить отзыв</h3>
+            <div class="star-rating">
+                <button data-rating="1">★</button>
+                <button data-rating="2">★</button>
+                <button data-rating="3">★</button>
+                <button data-rating="4">★</button>
+                <button data-rating="5">★</button>
+            </div>
+            <textarea placeholder="Ваш комментарий"></textarea>
+            <button class="btn-primary submit-review">Отправить</button>
+        </div>
+        {% endif %}
+        <div id="modal-reviews"></div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-stats">
+    <div class="stat-card">
+        <h3>Пользователи</h3>
+        <p class="stat-number">{{ users|length }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Сервисы</h3>
+        <p class="stat-number">{{ services|length }}</p>
+    </div>
+</div>
+{% endblock %} 

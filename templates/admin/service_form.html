@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>{% if service %}Редактировать{% else %}Добавить{% endif %} сервис</h2>
+</div>
+
+<form method="POST" class="service-form">
+    <div class="form-group">
+        <label for="title">Название:</label>
+        <input type="text" id="title" name="title" value="{{ service.title if service else '' }}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="description">Краткое описание:</label>
+        <textarea id="description" name="description" required>{{ service.description if service else '' }}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="category">Категория:</label>
+        <input type="text" id="category" name="category" value="{{ service.category if service else '' }}" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="subcategory">Подкатегория:</label>
+        <input type="text" id="subcategory" name="subcategory" value="{{ service.subcategory if service else '' }}">
+    </div>
+    
+    <div class="form-group">
+        <label for="tags">Теги (через запятую):</label>
+        <input type="text" id="tags" name="tags" value="{{ service.tags if service else '' }}">
+    </div>
+    
+    <div class="form-group">
+        <label for="detailed_description">Подробное описание:</label>
+        <textarea id="detailed_description" name="detailed_description">{{ service.detailed_description if service else '' }}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="pricing_type">Тип цены:</label>
+        <select id="pricing_type" name="pricing_type" required>
+            <option value="free" {% if service and service.pricing_type == 'free' %}selected{% endif %}>Бесплатно</option>
+            <option value="paid" {% if service and service.pricing_type == 'paid' %}selected{% endif %}>Платно</option>
+            <option value="freemium" {% if service and service.pricing_type == 'freemium' %}selected{% endif %}>Freemium</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="pricing">Цены:</label>
+        <textarea id="pricing" name="pricing">{{ service.pricing if service else '' }}</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="link">Ссылка:</label>
+        <input type="url" id="link" name="link" value="{{ service.link if service else '' }}">
+    </div>
+    
+    <div class="form-group">
+        <label for="rating">Рейтинг:</label>
+        <input type="number" id="rating" name="rating" min="0" max="5" step="0.1" value="{{ service.rating if service else 0 }}">
+    </div>
+    
+    <button type="submit" class="btn-primary">Сохранить</button>
+    <a href="{{ url_for('admin_services') }}" class="btn-secondary">Отмена</a>
+</form>
+{% endblock %} 

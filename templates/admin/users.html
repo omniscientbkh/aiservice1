@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>Управление пользователями</h2>
+</div>
+
+<div class="users-table">
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Роль</th>
+                <th>Дата регистрации</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('update_user_role', user_id=user.id) }}">
+                        <select name="role" onchange="this.form.submit()">
+                            <option value="user" {% if user.role == 'user' %}selected{% endif %}>Пользователь</option>
+                            <option value="moderator" {% if user.role == 'moderator' %}selected{% endif %}>Модератор</option>
+                            <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Администратор</option>
+                        </select>
+                    </form>
+                </td>
+                <td>{{ user.created_at.strftime('%d.%m.%Y') }}</td>
+                <td>
+                    <button class="btn-danger" onclick="deleteUser({{ user.id }})">Удалить</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 
